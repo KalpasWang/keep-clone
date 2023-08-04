@@ -1,8 +1,24 @@
 import request from 'supertest';
 import app from '../src/app';
 import userModel from '../src/models/userModel';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose from 'mongoose';
 
-describe('user signup', () => {
+describe('User sign up', () => {
+  beforeAll(async () => {
+    const server = await MongoMemoryServer.create();
+    mongoose.connect(server.getUri());
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoose.connection.close();
+  });
+
+  beforeEach(async () => {
+    await userModel.collection.drop();
+  });
+
   describe('如果是 valid request', () => {
     it('回傳 201 created', async () => {
       const response = await request(app).post('/api/users').send({
