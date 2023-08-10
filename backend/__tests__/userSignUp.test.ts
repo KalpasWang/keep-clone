@@ -1,6 +1,6 @@
 import request from 'supertest';
-import app from '../src/app';
-import userModel from '../src/models/userModel';
+import app from '../app';
+import userModel from '../models/userModel';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 
@@ -53,5 +53,12 @@ describe('User sign up', () => {
       expect(user).not.toBeNull();
       expect(user?.password).not.toBe('123abc');
     });
+  });
+
+  describe('如果是 invalid request', () => {
+    it.each`
+      field         | value   | expectedMessage
+      ${'username'} | ${null} | ${'username is required'}
+    `('如果 $field 為 $value，回傳 $expectedMessage', () => {});
   });
 });
