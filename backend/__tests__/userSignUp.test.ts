@@ -4,12 +4,17 @@ import userModel from '../models/userModel';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 
-const defaultUser = {
+interface User {
+  username: string | null;
+  email: string | null;
+  password: string | null;
+}
+
+const defaultUser: User = {
   username: 'user1',
   email: 'user1@gmail.com',
   password: '123abc',
 };
-// type User = typeof defaultUser;
 
 function postUser(user = defaultUser) {
   return request(app).post('/api/users').send(user);
@@ -18,7 +23,7 @@ function postUser(user = defaultUser) {
 describe('User sign up', () => {
   beforeAll(async () => {
     const server = await MongoMemoryServer.create();
-    mongoose.connect(server.getUri());
+    await mongoose.connect(server.getUri());
   });
 
   afterAll(async () => {
@@ -27,7 +32,8 @@ describe('User sign up', () => {
   });
 
   beforeEach(async () => {
-    await userModel.collection.drop();
+    const n = await userModel.countDocuments();
+    if (n > 0) await userModel.collection.drop();
   });
 
   describe('如果是 valid request', () => {
@@ -56,9 +62,19 @@ describe('User sign up', () => {
   });
 
   describe('如果是 invalid request', () => {
-    it.each`
-      field         | value   | expectedMessage
-      ${'username'} | ${null} | ${'username is required'}
-    `('如果 $field 為 $value，回傳 $expectedMessage', () => {});
+    describe('如果 username 欄位是 invalid', () => {
+      it('回傳 status 400', async () => {
+        const response = await postUser({
+          username: null,
+          email: 'user1@mail.com',
+          password: 'P4ssword',
+        });
+        expect(response.status).toBe(400);
+      });
+    });
+    // it.each`
+    //   field         | value   | expectedMessage
+    //   ${'username'} | ${null} | ${'username is required'}
+    // `('如果 $field 為 $value，回傳 $expectedMessage', () => {});
   });
 });
